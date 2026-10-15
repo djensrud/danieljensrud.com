@@ -1,0 +1,137 @@
+/* ==========================================================
+   Shared styles for the "being worked on" pages
+   (work.html, about.html, contact.html)
+   EDIT THESE FIRST
+   ========================================================== */
+:root {
+  --text: #ffffff;                 /* message color */
+  --accent: #00ffb9;               /* your brand green (hover glow + background) */
+  --base-dark: #0e1216;            /* darkest part of the background */
+  --font: "Nunito Sans", "Avenir Next", Avenir, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --message-size: clamp(1.25rem, 2.4vw, 1.9rem);   /* message text size */
+  --glow-radius: 130px;                           /* size of the green spotlight under the cursor */
+
+  --green-glow: rgba(0, 255, 185, 0.18);          /* background: green strength (low = subtler) */
+  --grey-glow: rgba(150, 160, 170, 0.16);         /* background: grey strength */
+  --drift-speed: 32s;                             /* background: time for one slow drift (bigger = calmer) */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: linear-gradient(160deg, #141a1f 0%, var(--base-dark) 55%, #0a0d10 100%);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* ---------- Animated background: slow-drifting green and grey light ---------- */
+.bg {
+  position: fixed;
+  inset: -30%;                                   /* oversized so edges never show while it moves */
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 38% at 24% 32%, var(--green-glow), transparent 70%),
+    radial-gradient(42% 42% at 76% 66%, var(--grey-glow), transparent 70%),
+    radial-gradient(30% 30% at 62% 18%, rgba(0, 255, 185, 0.09), transparent 70%);
+  animation: drift var(--drift-speed) ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+.bg::after {                                     /* a second, slower layer so the movement never feels repetitive */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(34% 34% at 70% 30%, var(--grey-glow), transparent 70%),
+    radial-gradient(36% 36% at 30% 74%, rgba(0, 255, 185, 0.11), transparent 70%);
+  animation: drift-back calc(var(--drift-speed) * 1.4) ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes drift {
+  from { transform: translate3d(-4%, 3%, 0) rotate(0deg) scale(1); }
+  to   { transform: translate3d(4%, -3%, 0) rotate(10deg) scale(1.12); }
+}
+
+@keyframes drift-back {
+  from { transform: translate3d(3%, -2%, 0) rotate(6deg) scale(1.1); }
+  to   { transform: translate3d(-3%, 3%, 0) rotate(-6deg) scale(1); }
+}
+
+/* ---------- Layout ---------- */
+main {
+  --page-pad-bottom: calc(1.5rem + 8vh);         /* extra bottom padding lifts the message slightly above center */
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;              /* empty zone above | message | zone below (holds the icons) */
+  justify-items: center;
+  padding: 1.5rem 1.5rem var(--page-pad-bottom);
+}
+
+main .message {
+  grid-row: 2;
+}
+
+/* Social icons: centered halfway between the message and the bottom of the screen */
+main .social {
+  --social-color: rgba(255, 255, 255, 0.8);      /* white at 80% opacity on these pages */
+  --social-icon-size: 1.6rem;                    /* icon size on these pages */
+  position: static;
+  grid-row: 3;
+  margin-bottom: calc(var(--page-pad-bottom) * -1);   /* lets the zone reach the very bottom of the screen */
+  justify-content: center;
+  align-items: center;
+}
+
+/* ---------- Message (white; glows green under the cursor, like the homepage tagline) ---------- */
+.message {
+  position: relative;
+  max-width: min(48rem, 100%);
+  padding: 0.5em 0.9em;                          /* room so the glow isn't clipped */
+  font-size: var(--message-size);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  text-align: center;
+  text-wrap: balance;                            /* keeps the two lines an even length */
+  cursor: default;
+  --x: 50%;
+  --y: 50%;
+}
+
+.message-base {
+  color: var(--text);
+}
+
+/* The green copy sits exactly on top of the white one, but is only
+   revealed in a soft circle around the cursor. */
+.message-glow {
+  position: absolute;
+  inset: 0;
+  padding: inherit;
+  text-align: center;
+  color: var(--accent);
+  text-shadow: 0 0 0.2em var(--accent), 0 0 0.7em rgba(0, 255, 185, 0.65);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle var(--glow-radius) at var(--x) var(--y),
+                      #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 100%);
+          mask-image: radial-gradient(circle var(--glow-radius) at var(--x) var(--y),
+                      #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 100%);
+}
+
+.message.is-lit .message-glow {
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg, .bg::after { animation: none; }
+}

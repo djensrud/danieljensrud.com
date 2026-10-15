@@ -1,0 +1,223 @@
+/* ==========================================================
+   EDIT THESE FIRST
+   ========================================================== */
+:root {
+  --text: #ffffff;                 /* link color */
+  --accent: #00ffb9;               /* green used for hover/glow (matches your logo) */
+  --bg-fallback: #14181c;          /* shown if the video hasn't loaded */
+  --overlay: rgba(0, 0, 0, 0.68);  /* darkens the video (0 = none, 1 = black) */
+  --font: "Nunito Sans", "Avenir Next", Avenir, system-ui, -apple-system, "Segoe UI", sans-serif;   /* Avenir-style font for the tagline and links */
+  --font-script: var(--font);   /* tagline uses the same font as the links; set to a different font name to change it */
+
+  /* Logo size: scales with screen width, but never taller than the screen allows */
+  --logo-width: min(clamp(240px, 42vw, 560px), 60vh);
+
+  --tagline-color: #7b8189;        /* resting grey (darker = less visible) */
+  --tagline-size: calc(var(--logo-width) * 0.05);  /* starting size; the script in index.html fine-tunes it to fit under the logo */
+  --glow-radius: 110px;            /* how big the green spotlight is under the cursor */
+
+  --link-size: clamp(1rem, 1.5vw, 1.25rem);
+  --lift: 4vh;                     /* how far above true center everything sits */
+}
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body { height: 100%; }
+
+body {
+  font-family: var(--font);
+  color: var(--text);
+  background: var(--bg-fallback);
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;   /* homepage fits on one screen, no scrolling */
+}
+
+/* ---------- Background video ---------- */
+.bg-video {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: -2;
+}
+
+.bg-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--overlay);
+  z-index: -1;
+}
+
+/* ---------- Layout: one centered stack, nudged upward ---------- */
+.hero {
+  height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem 1.5rem calc(1rem + var(--lift) * 2);  /* extra bottom padding lifts the stack */
+}
+
+.logo {
+  display: block;
+  width: var(--logo-width);
+  height: auto;
+}
+
+/* ---------- Tagline (cursive, glows green under the cursor) ---------- */
+.tagline {
+  position: relative;
+  margin-top: clamp(0.25rem, 1.5vh, 1rem);   /* space between logo and tagline */
+  padding: 0.3em 0.8em;                       /* room so the script's swashes aren't clipped */
+  font-family: var(--font-script);
+  font-size: var(--tagline-size);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-align: center;
+  white-space: nowrap;
+  cursor: default;
+  --x: 50%;
+  --y: 50%;
+}
+
+.tagline-base {
+  color: var(--tagline-color);
+}
+
+/* The green copy sits exactly on top of the grey one, but is only
+   revealed in a soft circle around the cursor. */
+.tagline-glow {
+  position: absolute;
+  inset: 0;
+  padding: inherit;
+  text-align: center;
+  color: var(--accent);
+  text-shadow: 0 0 0.2em var(--accent), 0 0 0.7em rgba(0, 255, 185, 0.65);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(circle var(--glow-radius) at var(--x) var(--y),
+                      #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 100%);
+          mask-image: radial-gradient(circle var(--glow-radius) at var(--x) var(--y),
+                      #000 0%, rgba(0, 0, 0, 0.55) 45%, transparent 100%);
+}
+
+.tagline.is-lit .tagline-glow {
+  opacity: 1;
+}
+
+/* The | dividers use the regular font (they look odd in script) */
+.bar {
+  font-family: var(--font);
+  font-style: normal;
+  font-weight: 400;
+  font-size: 0.7em;
+  margin: 0 0.35em;
+  opacity: 0.8;
+}
+
+/* ---------- Links: subtle grey box that opens into glowing logo-style corner frames on hover ---------- */
+nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(0.8rem, 2.4vh, 1.15rem);           /* space between links */
+  margin-top: clamp(1.25rem, 4.5vh, 2.75rem);   /* space between tagline and links */
+}
+
+nav a {
+  --frame-thickness: 2.5px;                      /* thickness of the corner frames (matches the chunky logo bars) */
+  --frame-long: 41%;                             /* length of the long arm of each corner */
+  --frame-short: 64%;                            /* length of the short arm of each corner */
+  --frame-out-x: 0.9em;                          /* how far the corners grow outward past the resting box (sideways) */
+  --frame-out-y: 0.35em;                         /* ...and up/down */
+  position: relative;
+  display: block;
+  width: clamp(7.25rem, 10vw, 8.75rem);          /* all three boxes are the same width */
+  padding: calc(0.4em - 1px) 0;                  /* box height (the 1px border is subtracted so the size stays exact) */
+  text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.16);   /* the subtle grey box at rest (sharp corners) */
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--text);
+  text-decoration: none;
+  font-size: var(--link-size);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0.9;
+  /* mouse-out: the grey box fades back in slowly, starting while the corners are still sliding back */
+  transition: color 0.5s ease, opacity 0.5s ease, text-shadow 0.5s ease,
+              border-color 0.9s ease 0.2s, background-color 0.9s ease 0.2s;
+}
+
+/* The two corner frames, like the corners of your logo:
+   ::before = top-left corner, ::after = bottom-right corner.
+   At rest they are hidden, sitting exactly on the corners of the grey box; on hover they
+   appear there and slide outward to frame the text while the grey box fades away. */
+nav a::before,
+nav a::after {
+  content: "";
+  position: absolute;
+  width: var(--frame-long);                      /* full-size corner, hidden until hover */
+  height: var(--frame-short);
+  opacity: 0;
+  pointer-events: none;
+  /* drop-shadow follows the shape of the corner, so only the frame glows */
+  filter: drop-shadow(0 0 3px var(--accent)) drop-shadow(0 0 9px rgba(0, 255, 185, 0.6));
+  /* mouse-out: slide back onto the box corner, fading out gently while the grey box returns */
+  transition: transform 0.6s cubic-bezier(0.22, 0.8, 0.2, 1),
+              opacity 0.45s ease 0.25s;
+}
+
+nav a::before {
+  top: -1px;                                     /* lines up with the outer edge of the grey box */
+  left: -1px;
+  border-top: var(--frame-thickness) solid var(--accent);
+  border-left: var(--frame-thickness) solid var(--accent);
+}
+
+nav a::after {
+  bottom: -1px;
+  right: -1px;
+  border-bottom: var(--frame-thickness) solid var(--accent);
+  border-right: var(--frame-thickness) solid var(--accent);
+}
+
+nav a:hover,
+nav a:focus-visible {
+  color: var(--accent);
+  opacity: 1;
+  text-shadow: 0 0 0.6em rgba(0, 255, 185, 0.45);
+  border-color: transparent;                     /* the grey box fades out as the green corners take over */
+  background-color: transparent;
+  outline: none;                                 /* the corner frames are the focus indicator */
+  transition: color 0.3s ease, opacity 0.3s ease, text-shadow 0.3s ease,
+              border-color 0.5s ease, background-color 0.5s ease;
+}
+
+nav a:hover::before,
+nav a:hover::after,
+nav a:focus-visible::before,
+nav a:focus-visible::after {
+  opacity: 1;
+  /* hovering: appear on the box corners, then slide outward */
+  transition: transform 0.6s cubic-bezier(0.22, 0.8, 0.2, 1),
+              opacity 0.15s ease 0s;
+}
+
+nav a:hover::before,
+nav a:focus-visible::before {
+  transform: translate(calc(var(--frame-out-x) * -1), calc(var(--frame-out-y) * -1));
+}
+
+nav a:hover::after,
+nav a:focus-visible::after {
+  transform: translate(var(--frame-out-x), var(--frame-out-y));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  nav a, nav a::before, nav a::after { transition: none; }
+}
