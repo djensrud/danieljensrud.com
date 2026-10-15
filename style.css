@@ -41,6 +41,7 @@ body {
   height: 100%;
   object-fit: cover;
   z-index: -2;
+  pointer-events: none;   /* video can't be clicked or hovered, so no browser video buttons appear */
 }
 
 .bg-overlay {
