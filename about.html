@@ -4,31 +4,49 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>About | Daniel Jensrud</title>
-  <meta name="description" content="This page is currently being worked on.">
+  <meta name="description" content="Daniel Jensrud: Norwegian-American filmmaker, visual content creator, and storyteller.">
 
   <!-- Font (free, from Google Fonts): Nunito Sans, same as the homepage.
        Safe to delete these 3 lines; the site falls back to system fonts. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,400;0,6..12,500;0,6..12,600;0,6..12,700;1,6..12,700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="coming-soon.css">
+  <link rel="stylesheet" href="about.css">
   <link rel="stylesheet" href="social.css">
+  <!-- Page transitions (animation between pages) -->
+  <link rel="stylesheet" href="transition.css">
+  <script src="transition.js"></script>
 </head>
 <body>
 
   <div class="bg" aria-hidden="true"></div>
 
-  <main>
-    <!-- MESSAGE: two layers. The white one is what people read.
-         The green one (aria-hidden) is the glow that follows the cursor.
-         IMPORTANT: if you change the words, change them in BOTH layers. -->
-    <p class="message">
-      <span class="message-base">This page is currently being worked on.<br>Come back soon!</span>
-      <span class="message-glow" aria-hidden="true">This page is currently being worked on.<br>Come back soon!</span>
-    </p>
+  <!-- Small logo, top left. Click it to go back to the homepage. -->
+  <a class="home-link" href="index.html" data-transition="home" aria-label="Back to the homepage">
+    <img src="assets/logos/daniel-jensrud-a-logo-green.png" alt="">
+  </a>
 
-    <!-- SOCIAL LINKS (icons only, centered between the message and the bottom). Each logo is an inline <svg> inside <span class="icon">;
+  <!-- PHOTO: fades into the page (the fade is set in work.css). To swap it, replace the file in assets/photos/. -->
+  <div class="portrait">
+    <img src="assets/photos/daniel-jensrud-portrait.jpg" alt="Daniel Jensrud sitting on a balcony in the sun" width="1000" height="1496">
+  </div>
+
+  <main>
+    <div class="intro">
+      <h1>
+        <span class="hello">Hey there, I'm Daniel.</span>
+        <span class="role">I'm a Norwegian-American filmmaker, visual content creator, and storyteller.</span>
+      </h1>
+
+      <div class="rule" aria-hidden="true"></div>
+
+      <p class="about">
+        I grew up in the US, but in 2026, I moved to Norway to pursue a new life. My decision to move to Norway reflects my admiration for the Scandinavian mindset of balance, modesty, and authenticity, and I would love my work to reflect that. My dream is to create work that showcases both the most inspiring and most authentic parts of humanity.
+      </p>
+    </div>
+
+    <!-- SOCIAL LINKS (icons only, bottom center). Each logo is an inline <svg> inside <span class="icon">;
          it takes the same color as the link (grey, then green on hover). The "My ..." text is hidden but still read by
          screen readers, and shows as a tooltip when you hover. -->
     <footer class="social" aria-label="Social links">
@@ -37,19 +55,6 @@
       <a href="https://www.patreon.com/cw/DanielJensrud" title="My Patreon" target="_blank" rel="noopener noreferrer"><span class="icon" aria-hidden="true"><svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.957 7.21c-.004-3.064-2.391-5.576-5.191-6.482-3.478-1.125-8.064-.962-11.384.604C2.357 3.231 1.093 7.391 1.046 11.54c-.039 3.411.302 12.396 5.369 12.46 3.765.047 4.326-4.804 6.068-7.141 1.24-1.662 2.836-2.132 4.801-2.618 3.376-.836 5.678-3.501 5.673-7.031Z"/></svg></span><span class="visually-hidden">My Patreon</span></a>
     </footer>
   </main>
-
-  <!-- Makes the green glow follow the mouse (or finger). -->
-  <script>
-    const message = document.querySelector('.message');
-
-    message.addEventListener('pointermove', (e) => {
-      const box = message.getBoundingClientRect();
-      message.style.setProperty('--x', (e.clientX - box.left) + 'px');
-      message.style.setProperty('--y', (e.clientY - box.top) + 'px');
-    });
-    message.addEventListener('pointerenter', () => message.classList.add('is-lit'));
-    message.addEventListener('pointerleave', () => message.classList.remove('is-lit'));
-  </script>
 
 </body>
 </html>

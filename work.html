@@ -14,10 +14,18 @@
 
   <link rel="stylesheet" href="coming-soon.css">
   <link rel="stylesheet" href="social.css">
+  <!-- Page transitions (animation between pages) -->
+  <link rel="stylesheet" href="transition.css">
+  <script src="transition.js"></script>
 </head>
 <body>
 
   <div class="bg" aria-hidden="true"></div>
+
+  <!-- Small logo, top left. Click it to go back to the homepage. -->
+  <a class="home-link" href="index.html" data-transition="home" aria-label="Back to the homepage">
+    <img src="assets/logos/daniel-jensrud-a-logo-green.png" alt="">
+  </a>
 
   <main>
     <!-- MESSAGE: two layers. The white one is what people read.

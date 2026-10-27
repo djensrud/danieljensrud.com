@@ -1,0 +1,72 @@
+/* ==========================================================
+   Page transitions (used by every page, driven by transition.js)
+   EDIT THESE FIRST
+   ========================================================== */
+:root {
+  --tr-bg: #0b0e11;                                /* color of the sweep / iris (matches the dark theme) */
+  --tr-accent: #00ffb9;                            /* your brand green (edge line + logo mark) */
+  --tr-mark: clamp(96px, 16vmin, 150px);           /* size of the logo mark in the middle */
+}
+
+/* While a page is arriving from a transition, keep it hidden behind the dark cover (prevents any flash). */
+html.tr-enter { background: var(--tr-bg); }
+html.tr-enter body { opacity: 0; }
+
+.tr {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+/* ----- "page" version: a slanted panel (same angle as the logo's edges) sweeps across with a glowing green edge ----- */
+.tr-slide {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: calc(100vw + var(--s) * 2);
+  will-change: transform;
+}
+.tr-panel {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(40% 55% at 50% 50%, rgba(0, 255, 185, 0.07), transparent 70%),
+    var(--tr-bg);
+  clip-path: polygon(var(--s) 0, 100% 0, calc(100% - var(--s)) 100%, 0 100%);
+}
+.tr-glow {
+  position: absolute;
+  inset: 0;
+  filter: drop-shadow(0 0 7px rgba(0, 255, 185, 0.85)) drop-shadow(0 0 22px rgba(0, 255, 185, 0.45));
+}
+.tr-line { position: absolute; inset: 0; background: var(--tr-accent); }
+.tr-line-lead  { clip-path: polygon(calc(100% - 3px) 0, 100% 0, calc(100% - var(--s)) 100%, calc(100% - var(--s) - 3px) 100%); }
+.tr-line-trail { clip-path: polygon(var(--s) 0, calc(var(--s) + 3px) 0, 3px 100%, 0 100%); }
+
+/* ----- "home" version: the logo grows out of the corner and a dark circle opens from it ----- */
+.tr-iris { position: absolute; inset: 0; background: var(--tr-bg); }
+.tr-hole {                                         /* a see-through circle with a huge dark ring around it: growing it opens the page */
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 2px;
+  height: 2px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 0 90vmax var(--tr-bg);
+}
+
+/* ----- the logo mark (three pieces, like the logo) ----- */
+.tr-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: var(--tr-mark);
+  aspect-ratio: 300 / 264;
+  margin: calc(var(--tr-mark) * -0.44) 0 0 calc(var(--tr-mark) * -0.5);
+  filter: drop-shadow(0 0 14px rgba(0, 255, 185, 0.55));
+}
+.tr-mark svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; fill: var(--tr-accent); overflow: visible; }

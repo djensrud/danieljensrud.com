@@ -1,0 +1,228 @@
+/* ==========================================================
+   About page styles (about.html)
+   EDIT THESE FIRST
+   ========================================================== */
+:root {
+  --text: #ffffff;
+  --text-soft: rgba(255, 255, 255, 0.78);          /* paragraph color */
+  --accent: #00ffb9;                               /* your brand green */
+  --base-dark: #0e1216;
+  --font: "Nunito Sans", "Avenir Next", Avenir, system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --headline-size: clamp(1.9rem, 3.3vw, 3.1rem);   /* big intro line */
+  --body-size: clamp(1rem, 1.25vw, 1.2rem);        /* paragraph */
+  --text-width: 34rem;                             /* how wide the text column gets */
+
+  --photo-w: min(calc(100dvh * 0.64), 46vw);       /* photo width on desktop (tied to screen height) */
+  --photo-fade: 42%;                               /* how far in from its left edge the photo fades (bigger = softer) */
+
+  --green-glow: rgba(0, 255, 185, 0.16);
+  --grey-glow: rgba(150, 160, 170, 0.14);
+  --drift-speed: 32s;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  min-height: 100dvh;
+  font-family: var(--font);
+  color: var(--text);
+  background: linear-gradient(160deg, #141a1f 0%, var(--base-dark) 55%, #0a0d10 100%);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* ---------- Animated background (same as the other pages) ---------- */
+.bg {
+  position: fixed;
+  inset: -30%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(38% 38% at 24% 32%, var(--green-glow), transparent 70%),
+    radial-gradient(42% 42% at 76% 66%, var(--grey-glow), transparent 70%),
+    radial-gradient(30% 30% at 62% 18%, rgba(0, 255, 185, 0.09), transparent 70%);
+  animation: drift var(--drift-speed) ease-in-out infinite alternate;
+  will-change: transform;
+}
+.bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(34% 34% at 70% 30%, var(--grey-glow), transparent 70%),
+    radial-gradient(36% 36% at 30% 74%, rgba(0, 255, 185, 0.11), transparent 70%);
+  animation: drift-back calc(var(--drift-speed) * 1.4) ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes drift {
+  from { transform: translate3d(-4%, 3%, 0) rotate(0deg) scale(1); }
+  to   { transform: translate3d(4%, -3%, 0) rotate(10deg) scale(1.12); }
+}
+@keyframes drift-back {
+  from { transform: translate3d(3%, -2%, 0) rotate(0deg) scale(1.05); }
+  to   { transform: translate3d(-3%, 4%, 0) rotate(-8deg) scale(1); }
+}
+
+/* ---------- Small logo, top left: click to go home ---------- */
+.home-link {
+  position: fixed;
+  top: clamp(1.1rem, 2.4vw, 2rem);
+  left: clamp(1.25rem, 3vw, 2.5rem);
+  z-index: 5;
+  display: block;
+  width: 2.6rem;
+  opacity: 0.8;
+  transition: opacity 0.3s ease;
+}
+.home-link img { display: block; width: 100%; height: auto; }
+.home-link:hover, .home-link:focus-visible { opacity: 1; }
+.home-link:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
+
+/* ---------- Photo: fades into the page on the left and bottom ---------- */
+.portrait {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: var(--photo-w);
+  height: 100dvh;
+  z-index: 0;
+  pointer-events: none;
+  animation: fade-in 1.4s ease 0.15s both;
+}
+.portrait::after {                               /* faint darkening at the very top so the icons stay readable */
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 22%;
+  background: linear-gradient(to bottom, rgba(8, 11, 14, 0.5), transparent);
+}
+.portrait::before {                              /* soft green light behind the photo */
+  content: "";
+  position: absolute;
+  inset: 10% -20% 0 -30%;
+  background: radial-gradient(55% 50% at 55% 45%, rgba(0, 255, 185, 0.16), transparent 70%);
+}
+.portrait img {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 12%;
+  opacity: 0.92;
+  -webkit-mask-image:
+    linear-gradient(to right, transparent 0%, #000 var(--photo-fade)),
+    linear-gradient(to bottom, #000 62%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image:
+    linear-gradient(to right, transparent 0%, #000 var(--photo-fade)),
+    linear-gradient(to bottom, #000 62%, transparent 100%);
+  mask-composite: intersect;
+}
+
+/* ---------- Text ---------- */
+main {
+  position: relative;
+  z-index: 1;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  padding: 4.5rem clamp(1.5rem, 8vw, 8rem) 4.5rem;
+  padding-right: calc(var(--photo-w) * 0.55);
+}
+
+.intro { width: min(var(--text-width), 100%); }
+
+h1 {
+  font-size: var(--headline-size);
+  font-weight: 700;
+  line-height: 1.16;
+  letter-spacing: -0.005em;
+  text-wrap: balance;
+}
+h1 .hello {
+  display: block;
+  margin-bottom: 0.18em;
+  color: var(--accent);
+  font-style: italic;
+  text-shadow: 0 0 28px rgba(0, 255, 185, 0.35);
+}
+
+.rule {                                          /* green line between headline and paragraph: a soft light glides along it, left to right, on a loop */
+  width: clamp(7rem, 11vw, 9.5rem);
+  height: 2px;
+  margin: clamp(1.6rem, 4vh, 2.6rem) 0;
+  border-radius: 2px;
+  background:
+    linear-gradient(90deg, rgba(0, 255, 185, 0) 0%, var(--accent) 50%, rgba(0, 255, 185, 0) 100%) -150% 0 / 60% 100% no-repeat,
+    rgba(0, 255, 185, 0.14);                     /* faint resting track under the moving light */
+  box-shadow: 0 0 14px rgba(0, 255, 185, 0.4);
+}
+@keyframes sweep {
+  from { background-position: -150% 0, 0 0; }
+  to   { background-position: 250% 0, 0 0; }
+}
+
+.about {
+  font-size: var(--body-size);
+  font-weight: 500;
+  line-height: 1.75;
+  color: var(--text-soft);
+  text-wrap: pretty;
+}
+
+.hello, h1 .role, .about { animation: rise 0.9s cubic-bezier(0.22, 0.8, 0.2, 1) both; }
+h1 .hello { animation-delay: 0.1s; }
+h1 .role  { animation-delay: 0.22s; }
+.about    { animation-delay: 0.48s; }
+.rule {
+  animation:
+    rise 0.9s cubic-bezier(0.22, 0.8, 0.2, 1) 0.36s both,
+    sweep 3.8s cubic-bezier(0.45, 0.05, 0.55, 0.95) 1.2s infinite;   /* 3.8s = time for one pass (bigger = slower) */
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+
+/* ---------- Social icons: top right, lined up with the logo on the left ---------- */
+main .social {
+  --social-color: rgba(255, 255, 255, 0.62);     /* resting color (lower = more transparent) */
+  --social-icon-size: 1.3rem;                    /* icon size */
+  position: fixed;
+  top: calc(clamp(1.1rem, 2.4vw, 2rem) + 0.25rem);          /* centers the icons on the logo's height */
+  right: calc(clamp(1.25rem, 3vw, 2.5rem) - 0.4rem);        /* same distance from the edge as the logo (minus link padding) */
+  left: auto;
+  bottom: auto;
+  transform: none;
+  z-index: 4;
+  gap: 0.25rem 0.9rem;
+}
+main .social .icon { filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.55)); }   /* keeps them readable over the bright part of the photo */
+
+/* ---------- Phones / narrow windows: photo on top, text below, page scrolls ---------- */
+@media (max-width: 860px), (max-height: 520px) {
+  .portrait {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    height: min(62vh, 120vw);
+    margin-bottom: calc(min(62vh, 120vw) * -0.22);
+  }
+  .portrait img {
+    object-position: 50% 10%;
+    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+  }
+  main { position: static; min-height: 0; display: block; padding: 0 1.5rem 1.5rem; }
+  .intro { margin: 0 auto; }
+  main .social { position: absolute; }           /* stays top right, scrolls away with the page */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bg, .bg::after, .portrait, .hello, h1 .role, .rule, .about { animation: none; }
+  .rule { background-position: 50% 0, 0 0; }
+}
