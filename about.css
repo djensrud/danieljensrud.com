@@ -64,20 +64,6 @@ body {
   to   { transform: translate3d(-3%, 4%, 0) rotate(-8deg) scale(1); }
 }
 
-/* ---------- Small logo, top left: click to go home ---------- */
-.home-link {
-  position: fixed;
-  top: clamp(1.1rem, 2.4vw, 2rem);
-  left: clamp(1.25rem, 3vw, 2.5rem);
-  z-index: 5;
-  display: block;
-  width: 2.6rem;
-  opacity: 0.8;
-  transition: opacity 0.3s ease;
-}
-.home-link img { display: block; width: 100%; height: auto; }
-.home-link:hover, .home-link:focus-visible { opacity: 1; }
-.home-link:focus-visible { outline: 1px solid var(--accent); outline-offset: 4px; }
 
 /* ---------- Photo: fades into the page on the left and bottom ---------- */
 .portrait {
@@ -188,13 +174,13 @@ h1 .role  { animation-delay: 0.22s; }
 }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 
-/* ---------- Social icons: top right, lined up with the logo on the left ---------- */
+/* ---------- Social icons: top right, lined up with the logo on the left (phones: they live in the hamburger menu, see site-header.css) ---------- */
 main .social {
   --social-color: rgba(255, 255, 255, 0.62);     /* resting color (lower = more transparent) */
   --social-icon-size: 1.3rem;                    /* icon size */
   position: fixed;
-  top: calc(clamp(1.1rem, 2.4vw, 2rem) + 0.25rem);          /* centers the icons on the logo's height */
-  right: calc(clamp(1.25rem, 3vw, 2.5rem) - 0.4rem);        /* same distance from the edge as the logo (minus link padding) */
+  top: calc(var(--header-top) - 0.04rem);                   /* centers the icons on the logo's height */
+  right: calc(var(--header-x) - 0.4rem);                    /* same distance from the edge as the logo (minus link padding) */
   left: auto;
   bottom: auto;
   transform: none;
@@ -203,23 +189,47 @@ main .social {
 }
 main .social .icon { filter: drop-shadow(0 1px 6px rgba(0, 0, 0, 0.55)); }   /* keeps them readable over the bright part of the photo */
 
-/* ---------- Phones / narrow windows: photo on top, text below, page scrolls ---------- */
+/* ---------- Phones / narrow windows: photo on top (fading into the text), text below.
+   The photo takes whatever height is left, so everything fits one screen on most phones. ---------- */
 @media (max-width: 860px), (max-height: 520px) {
+  :root {
+    --headline-size: clamp(1.55rem, 6.7vw, 2.1rem);
+    --body-size: clamp(0.94rem, 3.95vw, 1.06rem);
+  }
+  body { display: flex; flex-direction: column; min-height: 100dvh; }
+
   .portrait {
     position: relative;
-    overflow: hidden;
+    top: auto;
+    right: auto;
+    flex: 1 1 0;                                 /* grows/shrinks to fill the screen */
     width: 100%;
-    height: min(62vh, 120vw);
-    margin-bottom: calc(min(62vh, 120vw) * -0.22);
+    height: auto;
+    min-height: 30dvh;                           /* never smaller than this (the page scrolls instead) */
+    max-height: 62dvh;                           /* never taller than this */
+    margin-bottom: -2.75rem;                     /* tucks the text up into the photo's faded bottom edge */
+    overflow: hidden;
   }
   .portrait img {
-    object-position: 50% 10%;
-    -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-    mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+    position: absolute;
+    inset: 0;
+    object-position: 50% 8%;
+    -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 58%, transparent 100%);
+    -webkit-mask-composite: source-over;
+    mask-composite: add;
   }
-  main { position: static; min-height: 0; display: block; padding: 0 1.5rem 1.5rem; }
-  .intro { margin: 0 auto; }
-  main .social { position: absolute; }           /* stays top right, scrolls away with the page */
+  main {
+    position: static;
+    z-index: auto;
+    flex: 0 0 auto;
+    min-height: 0;
+    display: block;
+    padding: 0 1.6rem calc(2.6rem + env(safe-area-inset-bottom, 0px));
+  }
+  .intro { position: relative; z-index: 1; margin: 0 auto; }
+  .rule { margin: clamp(1rem, 2.6dvh, 1.5rem) 0; }
+  .about { line-height: 1.65; }
 }
 
 @media (prefers-reduced-motion: reduce) {

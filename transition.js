@@ -18,10 +18,32 @@
      them when you open local files), so we accept whichever arrives: the address (#dj-tr=...), window.name, or sessionStorage. */
   var pending = null;
   var m = /(?:^|[#&])dj-tr=(home|page)/.exec(location.hash);
-  if (m) {
-    pending = m[1];
-    try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) {}   // tidy the address bar
+  if (m) pending = m[1];
+
+  /* Keep the address bar clean: /about instead of /about.html, and just the bare domain on the homepage. */
+  (function tidyAddress() {
+    if (!/^https?:$/.test(location.protocol)) {                 // opening the files straight from your computer: only tidy our own tag
+      if (m) { try { history.replaceState(history.state, '', location.pathname + location.search); } catch (e) {} }
+      return;
+    }
+    var p = location.pathname.replace(/\/index\.html$/, '/').replace(/\.html$/, '');
+    var isHome = p === '/' || p === '';
+    var target = (isHome ? '/' : p) + (isHome ? '' : location.search);
+    if (target !== location.pathname + location.search || location.hash) {
+      try { history.replaceState(history.state, '', target); } catch (e) {}
+    }
+  })();
+
+  /* Opening the files straight from your computer: there is no server to map /about to about.html, so point the links at the real files. */
+  if (location.protocol === 'file:') {
+    document.addEventListener('DOMContentLoaded', function () {
+      [].forEach.call(document.querySelectorAll('a[href^="/"]'), function (a) {
+        var h = a.getAttribute('href');
+        a.setAttribute('href', h === '/' ? 'index.html' : h.slice(1) + '.html');
+      });
+    });
   }
+
   if (window.name.indexOf(TAG) === 0) { if (!pending) pending = window.name.slice(TAG.length); window.name = ''; }
   try {
     var saved = sessionStorage.getItem(TAG);
@@ -38,7 +60,9 @@
   ];
   var OFFSETS = [[70, -90], [-100, 50], [80, 100]];   /* where each piece flies in from / out to (px) */
   var EASE_IN_OUT = 'cubic-bezier(0.65, 0, 0.25, 1)';
-  var FADE_MS = 700;   /* length of the soft fade-in after a transition (bigger = slower) */
+  var SPEED_FACTOR = 1;                             /* 1 = original speed, smaller = faster (0.76 is about 25% faster than this) */
+  function SPEED(ms) { return Math.round(ms * SPEED_FACTOR); }
+  var FADE_MS = 700;                                /* soft fade-in of the page after a transition */
   var EASE_OUT = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
 
   function el(cls, parent) {
@@ -93,26 +117,26 @@
   function pageExit() {
     var ov = makeOverlay(), s = sOf(ov), W = innerWidth + 2 * s;
     var slide = addSlide(ov), pieces = addPieces(ov);
-    var jobs = [run(slide, [{ transform: slideX(-W) }, { transform: slideX(-s) }], { duration: 520, easing: EASE_IN_OUT })];
+    var jobs = [run(slide, [{ transform: slideX(-W) }, { transform: slideX(-s) }], { duration: SPEED(520), easing: EASE_IN_OUT })];
     pieces.forEach(function (p, i) {
       var o = OFFSETS[i];
       jobs.push(run(p, [
         { opacity: 0, transform: 'translate(' + o[0] + 'px,' + o[1] + 'px)' },
         { opacity: 1, transform: 'translate(0,0)' }
-      ], { duration: 340, delay: 230 + i * 55, easing: EASE_OUT }));
+      ], { duration: SPEED(340), delay: SPEED(230) + i * SPEED(55), easing: EASE_OUT }));
     });
-    return Promise.all(jobs).then(function () { return wait(60); });
+    return Promise.all(jobs).then(function () { return wait(SPEED(60)); });
   }
   function pageArrive(ov) {
     var s = sOf(ov);
     var slide = ov.querySelector('.tr-slide'), pieces = [].slice.call(ov.querySelectorAll('.tr-mark svg'));
-    var jobs = [run(slide, [{ transform: slideX(-s) }, { transform: slideX(innerWidth) }], { duration: 640, delay: 170, easing: EASE_IN_OUT })];
+    var jobs = [run(slide, [{ transform: slideX(-s) }, { transform: slideX(innerWidth) }], { duration: SPEED(640), delay: SPEED(170), easing: EASE_IN_OUT })];
     pieces.forEach(function (p, i) {
       var o = OFFSETS[i];
       jobs.push(run(p, [
         { opacity: 1, transform: 'translate(0,0)' },
         { opacity: 0, transform: 'translate(' + (-o[0]) + 'px,' + (-o[1]) + 'px)' }
-      ], { duration: 300, delay: i * 45, easing: 'ease-in' }));
+      ], { duration: SPEED(300), delay: i * SPEED(45), easing: 'ease-in' }));
     });
     return Promise.all(jobs);
   }
@@ -125,19 +149,21 @@
 
   /* ---------- "home": exit + arrive ---------- */
   function homeExit(link) {
-    var r = link.getBoundingClientRect();
+    var logo = link.querySelector('svg');
+    var r = (logo || link).getBoundingClientRect();
+    link.classList.add('tr-leaving');
     var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
     var ov = makeOverlay();
     var iris = el('tr-iris', ov), mark = addWholeMark(ov);
     var R = Math.hypot(Math.max(cx, innerWidth - cx), Math.max(cy, innerHeight - cy)) + 60;
     var markW = mark.getBoundingClientRect().width;
-    var s0 = (r.width * 0.8) / markW;
+    var s0 = r.width / markW;
     var dx = cx - innerWidth / 2, dy = cy - innerHeight / 2;
     var ease = 'cubic-bezier(0.7, 0, 0.2, 1)';
     return Promise.all([
-      run(iris, [{ clipPath: 'circle(0px at ' + cx + 'px ' + cy + 'px)' }, { clipPath: 'circle(' + R + 'px at ' + cx + 'px ' + cy + 'px)' }], { duration: 680, easing: ease }),
-      run(mark, [{ transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + s0 + ')' }, { transform: 'translate(0,0) scale(1)' }], { duration: 680, easing: ease })
-    ]).then(function () { return wait(60); });
+      run(iris, [{ clipPath: 'circle(0px at ' + cx + 'px ' + cy + 'px)' }, { clipPath: 'circle(' + R + 'px at ' + cx + 'px ' + cy + 'px)' }], { duration: SPEED(680), easing: ease }),
+      run(mark, [{ transform: 'translate(' + dx + 'px,' + dy + 'px) scale(' + s0 + ')' }, { transform: 'translate(0,0) scale(1)' }], { duration: SPEED(680), easing: ease })
+    ]).then(function () { return wait(SPEED(60)); });
   }
   function homeCover() {
     var ov = makeOverlay();
@@ -148,8 +174,8 @@
     var hole = ov.querySelector('.tr-hole'), mark = ov.querySelector('.tr-mark');
     var size = Math.max(innerWidth, innerHeight) * 1.8;
     return Promise.all([
-      run(hole, [{ width: '2px', height: '2px' }, { width: size + 'px', height: size + 'px' }], { duration: 820, delay: 120, easing: 'cubic-bezier(0.55, 0, 0.2, 1)' }),
-      run(mark, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(7)', opacity: 0 }], { duration: 760, delay: 60, easing: 'cubic-bezier(0.6, 0, 0.9, 0.4)' })
+      run(hole, [{ width: '2px', height: '2px' }, { width: size + 'px', height: size + 'px' }], { duration: SPEED(820), delay: SPEED(120), easing: 'cubic-bezier(0.55, 0, 0.2, 1)' }),
+      run(mark, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(7)', opacity: 0 }], { duration: SPEED(760), delay: SPEED(60), easing: 'cubic-bezier(0.6, 0, 0.9, 0.4)' })
     ]);
   }
 
@@ -163,7 +189,7 @@
       .then(function () {
         /* the page itself fades in softly while the cover clears, so nothing pops in at the end */
         document.body.animate([{ opacity: 0 }, { opacity: 1 }],
-          { duration: FADE_MS, delay: kind === 'home' ? 260 : 220, easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)', fill: 'backwards' });
+          { duration: FADE_MS, delay: SPEED(kind === 'home' ? 260 : 220), easing: 'cubic-bezier(0.25, 0.1, 0.25, 1)', fill: 'backwards' });
         return kind === 'home' ? homeArrive(ov) : pageArrive(ov);
       })
       .then(function () { ov.remove(); }, function () { ov.remove(); });
@@ -181,7 +207,8 @@
     var url;
     try { url = new URL(a.href, location.href); } catch (err) { return; }
     if (url.origin !== location.origin || url.protocol.indexOf('http') !== 0 && url.protocol !== 'file:') return;
-    if (url.pathname === location.pathname && url.search === location.search) return;   // same page / #anchor
+    var norm = function (p) { return p.replace(/\/index\.html$/, '/').replace(/\.html$/, '').replace(/\/$/, ''); };
+    if (norm(url.pathname) === norm(location.pathname) && url.search === location.search) return;   // same page / #anchor
     e.preventDefault();
     busy = true;
     var kind = mode === 'home' ? 'home' : 'page';

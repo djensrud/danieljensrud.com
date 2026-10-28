@@ -14,6 +14,7 @@
 
   <link rel="stylesheet" href="about.css">
   <link rel="stylesheet" href="social.css">
+  <link rel="stylesheet" href="site-header.css">
   <!-- Page transitions (animation between pages) -->
   <link rel="stylesheet" href="transition.css">
   <script src="transition.js"></script>
@@ -22,10 +23,41 @@
 
   <div class="bg" aria-hidden="true"></div>
 
-  <!-- Small logo, top left. Click it to go back to the homepage. -->
-  <a class="home-link" href="index.html" data-transition="home" aria-label="Back to the homepage">
-    <img src="assets/logos/daniel-jensrud-a-logo-green.png" alt="">
-  </a>
+  <!-- HEADER: logo (click = homepage; hover = it redraws as a little house) + links.
+       On phones the links and social icons live in the hamburger menu instead. -->
+  <header class="site-header">
+    <a class="home-link" href="/" data-transition="home" aria-label="Back to the homepage">
+      <svg class="home-mark" viewBox="34 50 300 264" aria-hidden="true" focusable="false">
+        <g class="mark">
+          <polygon points="178,59 191,59 287,238 222,238 152,109"/>
+          <polygon points="42,306 107,306 168,194 136,137"/>
+          <polygon points="137,306 326,306 300,260 163,260"/>
+        </g>
+        <g class="house">
+          <path pathLength="1" d="M70 178 L184 66 L298 178"/>
+          <path pathLength="1" d="M102 147 V300 H266 V147"/>
+          <path pathLength="1" d="M158 300 V222 H210 V300"/>
+        </g>
+      </svg>
+    </a>
+    <nav class="site-nav" aria-label="Main">
+      <a href="/work">Work</a>
+      <a href="/about" aria-current="page">About</a>
+      <a href="/contact">Contact</a>
+    </nav>
+    <button class="menu-toggle" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- PHONE MENU (hidden on desktop). The social icons appear at the bottom of it automatically. -->
+  <div class="mobile-menu" id="mobile-menu" aria-hidden="true">
+    <nav aria-label="Menu">
+      <a href="/work">Work</a>
+      <a href="/about" aria-current="page">About</a>
+      <a href="/contact">Contact</a>
+    </nav>
+  </div>
 
   <!-- PHOTO: fades into the page (the fade is set in work.css). To swap it, replace the file in assets/photos/. -->
   <div class="portrait">
@@ -56,5 +88,6 @@
     </footer>
   </main>
 
+  <script src="menu.js"></script>
 </body>
 </html>
