@@ -90,15 +90,17 @@
   function makeOverlay() {
     var ov = el('tr');
     ov.setAttribute('aria-hidden', 'true');
-    ov.style.setProperty('--s', Math.round(innerHeight * 0.56) + 'px');
+    var sl = Math.round(innerHeight * 0.56);
+    ov.style.setProperty('--s', sl + 'px');
+    ov.style.setProperty('--sk', Math.atan(sl / innerHeight) + 'rad');
     html.appendChild(ov);
     return ov;
   }
   function addSlide(ov) {
     var slide = el('tr-slide', ov);
     el('tr-panel', slide);
-    el('tr-glow', slide).appendChild(el('tr-line tr-line-lead'));
-    el('tr-glow', slide).appendChild(el('tr-line tr-line-trail'));
+    el('tr-bar tr-bar-lead', slide);
+    el('tr-bar tr-bar-trail', slide);
     return slide;
   }
   function addPieces(ov) {
@@ -117,7 +119,8 @@
   function pageExit() {
     var ov = makeOverlay(), s = sOf(ov), W = innerWidth + 2 * s;
     var slide = addSlide(ov), pieces = addPieces(ov);
-    var jobs = [run(slide, [{ transform: slideX(-W) }, { transform: slideX(-s) }], { duration: SPEED(520), easing: EASE_IN_OUT })];
+    var jobs = [run(slide, [{ transform: slideX(-W) }, { transform: slideX(-s) }], { duration: SPEED(520), easing: EASE_IN_OUT }),
+      run(ov.querySelector('.tr-mark'), [{ opacity: 0 }, { opacity: 1 }], { duration: SPEED(340), delay: SPEED(230), easing: 'ease-out' })];
     pieces.forEach(function (p, i) {
       var o = OFFSETS[i];
       jobs.push(run(p, [
@@ -130,7 +133,8 @@
   function pageArrive(ov) {
     var s = sOf(ov);
     var slide = ov.querySelector('.tr-slide'), pieces = [].slice.call(ov.querySelectorAll('.tr-mark svg'));
-    var jobs = [run(slide, [{ transform: slideX(-s) }, { transform: slideX(innerWidth) }], { duration: SPEED(640), delay: SPEED(170), easing: EASE_IN_OUT })];
+    var jobs = [run(slide, [{ transform: slideX(-s) }, { transform: slideX(innerWidth) }], { duration: SPEED(640), delay: SPEED(170), easing: EASE_IN_OUT }),
+      run(ov.querySelector('.tr-mark'), [{ opacity: 1 }, { opacity: 0 }], { duration: SPEED(300), delay: SPEED(40), easing: 'ease-in' })];
     pieces.forEach(function (p, i) {
       var o = OFFSETS[i];
       jobs.push(run(p, [
@@ -167,25 +171,30 @@
   }
   function homeCover() {
     var ov = makeOverlay();
-    var hole = el('tr-hole', ov); addWholeMark(ov);
+    el('tr-iris', ov); addWholeMark(ov);
     return ov;
   }
   function homeArrive(ov) {
-    var hole = ov.querySelector('.tr-hole'), mark = ov.querySelector('.tr-mark');
-    var size = Math.max(innerWidth, innerHeight) * 1.8;
+    var iris = ov.querySelector('.tr-iris'), mark = ov.querySelector('.tr-mark');
+    var R = Math.hypot(innerWidth, innerHeight) / 2 + 60;
     return Promise.all([
-      run(hole, [{ width: '2px', height: '2px' }, { width: size + 'px', height: size + 'px' }], { duration: SPEED(820), delay: SPEED(120), easing: 'cubic-bezier(0.55, 0, 0.2, 1)' }),
+      run(iris, [{ clipPath: 'circle(' + R + 'px at 50% 50%)' }, { clipPath: 'circle(0px at 50% 50%)' }], { duration: SPEED(820), delay: SPEED(120), easing: 'cubic-bezier(0.55, 0, 0.2, 1)' }),
       run(mark, [{ transform: 'scale(1)', opacity: 1 }, { transform: 'scale(7)', opacity: 0 }], { duration: SPEED(760), delay: SPEED(60), easing: 'cubic-bezier(0.6, 0, 0.9, 0.4)' })
     ]);
   }
 
-  /* ---------- arriving on a new page ---------- */
-  function arrive() {
-    var ov = pending === 'home' ? homeCover() : pageCover();
-    var kind = pending;
+  /* ---------- arriving on a new page ----------
+     The cover is built the moment this script runs (before the first paint), so the dark screen and the logo are
+     already there when the new page appears: no empty frame between the "leaving" and "arriving" animations. */
+  var cover = null;
+  if (pending && !reduce) cover = pending === 'home' ? homeCover() : pageCover();
+
+  function reveal() {
+    var kind = pending, ov = cover;
     html.classList.remove('tr-enter');
-    var ready = Promise.race([window.document.fonts ? document.fonts.ready : Promise.resolve(), wait(700)]);
-    ready.then(function () { return wait(80); })
+    var ready = Promise.race([window.document.fonts ? document.fonts.ready : Promise.resolve(), wait(250)]);
+    ready
+      .then(function () { return new Promise(function (r) { requestAnimationFrame(function () { requestAnimationFrame(r); }); }); })
       .then(function () {
         /* the page itself fades in softly while the cover clears, so nothing pops in at the end */
         document.body.animate([{ opacity: 0 }, { opacity: 1 }],
@@ -194,8 +203,27 @@
       })
       .then(function () { ov.remove(); }, function () { ov.remove(); });
   }
-  function onReady() { if (pending && !reduce) arrive(); }
+  function onReady() { if (cover) reveal(); }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', onReady); else onReady();
+
+  /* ---------- warm up the other pages so the jump between pages is as short as possible ---------- */
+  var warmed = {};
+  function warm(href) {
+    if (warmed[href] || !window.fetch) return;
+    warmed[href] = 1;
+    fetch(href, { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
+      var re = /(?:href|src)="([^"#?]+\.(?:css|js|jpg|jpeg|png|svg|webp))"/g, m2;
+      while ((m2 = re.exec(t))) { var u = new URL(m2[1], href).href; if (!warmed[u]) { warmed[u] = 1; fetch(u, { credentials: 'same-origin' }).catch(function () {}); } }
+      var img = /<img[^>]+src="([^"]+)"/g, m3;
+      while ((m3 = img.exec(t))) { var im = new Image(); im.src = new URL(m3[1], href).href; }
+    }).catch(function () {});
+  }
+  function warmAll() {
+    if (!/^https?:$/.test(location.protocol)) return;
+    var c = navigator.connection; if (c && c.saveData) return;
+    [].forEach.call(document.querySelectorAll('a[href^="/"]'), function (a) { var h = a.getAttribute('href'); if (h && h !== location.pathname) warm(h); });
+  }
+  window.addEventListener('load', function () { (window.requestIdleCallback || function (f) { setTimeout(f, 600); })(warmAll); });
 
   /* ---------- leaving: intercept clicks on internal links ---------- */
   document.addEventListener('click', function (e) {

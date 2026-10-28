@@ -37,28 +37,28 @@ html.tr-enter body { opacity: 0; }
     var(--tr-bg);
   clip-path: polygon(var(--s) 0, 100% 0, calc(100% - var(--s)) 100%, 0 100%);
 }
-.tr-glow {
+/* Glowing edge lines: thin skewed bars with a gradient (no heavy blur filters, so it stays smooth in every browser). */
+.tr-bar {
   position: absolute;
-  inset: 0;
-  filter: drop-shadow(0 0 7px rgba(0, 255, 185, 0.85)) drop-shadow(0 0 22px rgba(0, 255, 185, 0.45));
+  top: 0;
+  width: 46px;
+  height: 100%;
 }
-.tr-line { position: absolute; inset: 0; background: var(--tr-accent); }
-.tr-line-lead  { clip-path: polygon(calc(100% - 3px) 0, 100% 0, calc(100% - var(--s)) 100%, calc(100% - var(--s) - 3px) 100%); }
-.tr-line-trail { clip-path: polygon(var(--s) 0, calc(var(--s) + 3px) 0, 3px 100%, 0 100%); }
+.tr-bar-lead {                                     /* right edge of the panel (the leading edge while it sweeps in) */
+  left: calc(100% - 46px);
+  transform-origin: 100% 0;
+  transform: skewX(calc(var(--sk) * -1));
+  background: linear-gradient(to left, var(--tr-accent) 0, var(--tr-accent) 3px, rgba(0, 255, 185, 0.4) 4px, rgba(0, 255, 185, 0.16) 14px, rgba(0, 255, 185, 0) 46px);
+}
+.tr-bar-trail {                                    /* left edge of the panel (the trailing edge while it sweeps out) */
+  left: var(--s);
+  transform-origin: 0 0;
+  transform: skewX(calc(var(--sk) * -1));
+  background: linear-gradient(to right, var(--tr-accent) 0, var(--tr-accent) 3px, rgba(0, 255, 185, 0.4) 4px, rgba(0, 255, 185, 0.16) 14px, rgba(0, 255, 185, 0) 46px);
+}
 
-/* ----- "home" version: the logo grows out of the corner and a dark circle opens from it ----- */
+/* ----- "home" version: the logo grows out of the corner and a dark circle opens from it (and closes again on arrival) ----- */
 .tr-iris { position: absolute; inset: 0; background: var(--tr-bg); }
-.tr-hole {                                         /* a see-through circle with a huge dark ring around it: growing it opens the page */
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 90vmax var(--tr-bg);
-}
-
 /* ----- the logo mark (three pieces, like the logo) ----- */
 .tr-mark {
   position: absolute;
@@ -67,6 +67,11 @@ html.tr-enter body { opacity: 0; }
   width: var(--tr-mark);
   aspect-ratio: 300 / 264;
   margin: calc(var(--tr-mark) * -0.44) 0 0 calc(var(--tr-mark) * -0.5);
-  filter: drop-shadow(0 0 14px rgba(0, 255, 185, 0.55));
+}
+.tr-mark::before {                                 /* soft green glow behind the logo (plain gradient, no filter) */
+  content: "";
+  position: absolute;
+  inset: -70%;
+  background: radial-gradient(closest-side, rgba(0, 255, 185, 0.26), rgba(0, 255, 185, 0.08) 55%, rgba(0, 255, 185, 0) 100%);
 }
 .tr-mark svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; fill: var(--tr-accent); overflow: visible; }
