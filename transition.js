@@ -96,13 +96,6 @@
     html.appendChild(ov);
     return ov;
   }
-  function addSlide(ov) {
-    var slide = el('tr-slide', ov);
-    el('tr-panel', slide);
-    el('tr-bar tr-bar-lead', slide);
-    el('tr-bar tr-bar-trail', slide);
-    return slide;
-  }
   function addPieces(ov) {
     var mark = el('tr-mark', ov);
     return PIECES.map(function (pts) { var s = svgPiece(pts); mark.appendChild(s); return s; });
@@ -112,42 +105,83 @@
     PIECES.forEach(function (pts) { mark.appendChild(svgPiece(pts)); });
     return mark;
   }
-  function slideX(px) { return 'translateX(' + px + 'px)'; }
-  function sOf(ov) { return parseFloat(ov.style.getPropertyValue('--s')); }
 
-  /* ---------- "page": exit + arrive ---------- */
+  /* ---------- "page": dark cover + corner frames that expand and open a window onto the new page ---------- */
+  function buildPage(ov) {
+    var r = ov.getBoundingClientRect();
+    var W = Math.round(r.width) || innerWidth, H = Math.round(r.height) || innerHeight;
+    var small = Math.min(W, H);
+    var m = Math.min(150, Math.max(96, 0.16 * small));                 /* logo mark size */
+    var arm = Math.round(Math.min(64, Math.max(30, small * 0.06)));    /* length of each corner line */
+    var pad = Math.round(Math.min(34, Math.max(14, small * 0.035)));   /* where the frames end up, from the screen edges */
+    ov.style.setProperty('--tr-mark', m + 'px');
+    ov.style.setProperty('--arm', arm + 'px');
+    var cx = Math.round(W / 2), cy = Math.round(H / 2);
+    var fw = Math.round(m * 1.9), fh = Math.round(m * 1.72);           /* the little frame around the logo */
+    var x0 = cx - Math.round(fw / 2), x1 = x0 + fw, y0 = cy - Math.round(fh / 2), y1 = y0 + fh;
+
+    var wrap = el('tr-panes', ov);
+    function pane(l, t) {
+      var p = el('tr-pane', wrap);
+      p.style.left = l + 'px'; p.style.top = t + 'px'; p.style.width = W + 'px'; p.style.height = H + 'px';
+      return p;
+    }
+    var panes = { t: pane(0, cy - H), b: pane(0, cy), l: pane(cx - W, 0), r: pane(cx, 0) };   /* resting: all four meet in the middle = fully covered */
+    var aura = el('tr-aura', ov);
+    var pieces = addPieces(ov);
+    var tl = el('tr-corner tr-corner-tl', ov), br = el('tr-corner tr-corner-br', ov);
+    tl.style.left = x0 + 'px'; tl.style.top = y0 + 'px';
+    br.style.left = (x1 - arm) + 'px'; br.style.top = (y1 - arm) + 'px';
+    return {
+      wrap: wrap, panes: panes, aura: aura, pieces: pieces, tl: tl, br: br,
+      open: {                                                         /* how far each part travels to open the window past the screen edges */
+        t: [0, -(cy + 2)], b: [0, H + 2 - cy], l: [-(cx + 2), 0], r: [W + 2 - cx, 0],
+        tl: [pad - x0, pad - y0], br: [W - pad - x1, H - pad - y1]
+      }
+    };
+  }
+  function tx(v) { return 'translate(' + v[0] + 'px,' + v[1] + 'px)'; }
+
   function pageExit() {
-    var ov = makeOverlay(), s = sOf(ov), W = innerWidth + 2 * s;
-    var slide = addSlide(ov), pieces = addPieces(ov);
-    var jobs = [run(slide, [{ transform: slideX(-W) }, { transform: slideX(-s) }], { duration: SPEED(520), easing: EASE_IN_OUT }),
-      run(ov.querySelector('.tr-mark'), [{ opacity: 0 }, { opacity: 1 }], { duration: SPEED(340), delay: SPEED(230), easing: 'ease-out' })];
-    pieces.forEach(function (p, i) {
+    var ov = makeOverlay(), b = buildPage(ov);
+    var jobs = [
+      run(b.wrap, [{ opacity: 0 }, { opacity: 1 }], { duration: SPEED(420), easing: 'ease-out' }),
+      run(b.aura, [{ opacity: 0 }, { opacity: 1 }], { duration: SPEED(420), easing: 'ease-out' }),
+      run(b.tl, [{ opacity: 0, transform: 'translate(22px,22px)' }, { opacity: 1, transform: 'translate(0,0)' }], { duration: SPEED(420), delay: SPEED(300), easing: EASE_OUT }),
+      run(b.br, [{ opacity: 0, transform: 'translate(-22px,-22px)' }, { opacity: 1, transform: 'translate(0,0)' }], { duration: SPEED(420), delay: SPEED(300), easing: EASE_OUT })
+    ];
+    b.pieces.forEach(function (p, i) {
       var o = OFFSETS[i];
       jobs.push(run(p, [
         { opacity: 0, transform: 'translate(' + o[0] + 'px,' + o[1] + 'px)' },
         { opacity: 1, transform: 'translate(0,0)' }
-      ], { duration: SPEED(340), delay: SPEED(230) + i * SPEED(55), easing: EASE_OUT }));
+      ], { duration: SPEED(340), delay: SPEED(200) + i * SPEED(55), easing: EASE_OUT }));
     });
     return Promise.all(jobs).then(function () { return wait(SPEED(60)); });
   }
   function pageArrive(ov) {
-    var s = sOf(ov);
-    var slide = ov.querySelector('.tr-slide'), pieces = [].slice.call(ov.querySelectorAll('.tr-mark svg'));
-    var jobs = [run(slide, [{ transform: slideX(-s) }, { transform: slideX(innerWidth) }], { duration: SPEED(640), delay: SPEED(170), easing: EASE_IN_OUT }),
-      run(ov.querySelector('.tr-mark'), [{ opacity: 1 }, { opacity: 0 }], { duration: SPEED(300), delay: SPEED(40), easing: 'ease-in' })];
-    pieces.forEach(function (p, i) {
+    var b = ov._page, E = 'cubic-bezier(0.7, 0, 0.2, 1)', D = SPEED(820), d0 = SPEED(150), z = 'translate(0,0)';
+    var jobs = [];
+    b.pieces.forEach(function (p, i) {
       var o = OFFSETS[i];
       jobs.push(run(p, [
-        { opacity: 1, transform: 'translate(0,0)' },
+        { opacity: 1, transform: z },
         { opacity: 0, transform: 'translate(' + (-o[0]) + 'px,' + (-o[1]) + 'px)' }
       ], { duration: SPEED(300), delay: i * SPEED(45), easing: 'ease-in' }));
     });
+    ['t', 'b', 'l', 'r'].forEach(function (k) {                        /* the window opens */
+      jobs.push(run(b.panes[k], [{ transform: z }, { transform: tx(b.open[k]) }], { duration: D, delay: d0, easing: E }));
+    });
+    ['tl', 'br'].forEach(function (k) {                                /* the two corner frames lead the way, then fade out */
+      jobs.push(run(b[k], [{ transform: z }, { transform: tx(b.open[k]) }], { duration: D, delay: d0, easing: E, composite: 'replace' }));
+      jobs.push(run(b[k], [{ opacity: 1 }, { opacity: 0 }], { duration: Math.round(D * 0.3), delay: d0 + Math.round(D * 0.7), easing: 'ease-in' }));
+    });
+    jobs.push(run(b.aura, [{ opacity: 1 }, { opacity: 0 }], { duration: SPEED(460), delay: d0, easing: 'ease-in' }));
     return Promise.all(jobs);
   }
   function pageCover() {
-    var ov = makeOverlay(), s = sOf(ov);
-    var slide = addSlide(ov); addPieces(ov);
-    slide.style.transform = slideX(-s);
+    var ov = makeOverlay();
+    ov._page = buildPage(ov);
     return ov;
   }
 
