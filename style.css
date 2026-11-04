@@ -34,6 +34,14 @@ body {
 }
 
 /* ---------- Background video ---------- */
+/* The still image (poster) sits behind the video. The video itself stays invisible until it is really playing,
+   so a phone that blocks autoplay (or draws its own play button) shows just the still image, never player controls. */
+.bg-poster {
+  position: fixed;
+  inset: 0;
+  z-index: -3;
+  background: var(--bg-fallback) url("assets/poster.jpg") center / cover no-repeat;
+}
 .bg-video {
   position: fixed;
   inset: 0;
@@ -42,6 +50,21 @@ body {
   object-fit: cover;
   z-index: -2;
   pointer-events: none;   /* video can't be clicked or hovered, so no browser video buttons appear */
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+.bg-video.is-playing { opacity: 1; }
+
+/* belt and braces: switch off every built-in player control, in every browser */
+.bg-video::-webkit-media-controls,
+.bg-video::-webkit-media-controls-panel,
+.bg-video::-webkit-media-controls-play-button,
+.bg-video::-webkit-media-controls-start-playback-button,
+.bg-video::-webkit-media-controls-overlay-play-button,
+.bg-video::-webkit-media-controls-enclosure {
+  display: none !important;
+  -webkit-appearance: none;
+  opacity: 0 !important;
 }
 
 .bg-overlay {
