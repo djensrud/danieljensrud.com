@@ -18,6 +18,7 @@
   <!-- Page transitions (animation between pages) -->
   <link rel="stylesheet" href="transition.css">
   <script src="transition.js"></script>
+  <noscript><style>.hero { opacity: 1; }</style></noscript>
 </head>
 <body>
 
@@ -36,7 +37,7 @@
 
     <!-- LOGO: to swap it, change the filename after assets/logos/ -->
     <h1>
-      <img class="logo" src="assets/logos/daniel-jensrud-text-logo-green.png" alt="Daniel Jensrud">
+      <img class="logo" src="assets/logos/daniel-jensrud-text-logo-green.png" alt="Daniel Jensrud" width="2159" height="959">
     </h1>
 
     <!-- TAGLINE: two layers. The grey one is what people read.
@@ -86,16 +87,23 @@
     tagline.addEventListener('pointerleave', () => tagline.classList.remove('is-lit'));
 
     function fitTagline() {
-      tagline.style.fontSize = '';   // reset to the CSS size, then measure
+      tagline.style.fontSize = ''; tagline.style.height = '';   // reset to the CSS size, then measure
       const logoWidth = logo.getBoundingClientRect().width;
       const textWidth = taglineText.getBoundingClientRect().width;
       if (!logoWidth || !textWidth) return;
       const current = parseFloat(getComputedStyle(tagline).fontSize);
-      tagline.style.fontSize = (current * (logoWidth * TAGLINE_WIDTH) / textWidth) + 'px';
+      const fitted = current * (logoWidth * TAGLINE_WIDTH) / textWidth;
+      tagline.style.fontSize = fitted + 'px';
+      tagline.style.height = (fitted * 1.8) + 'px';   // same height as before (1.2 line + 0.3em padding top and bottom)
     }
-    document.fonts.ready.then(fitTagline);
-    window.addEventListener('load', fitTagline);
-    window.addEventListener('resize', fitTagline);
+    // The logo + tagline + links stay invisible until the font has loaded and the tagline is sized, then fade in together:
+    // nothing visibly resizes or jumps while the page loads.
+    const hero = document.querySelector('.hero');
+    let ready = false;
+    function showHero() { if (ready) return; fitTagline(); ready = true; hero.classList.add('is-ready'); }
+    (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(showHero);
+    setTimeout(showHero, 1500);   // safety net: never leave it hidden
+    window.addEventListener('resize', () => { if (ready) fitTagline(); });
   </script>
 
 </body>

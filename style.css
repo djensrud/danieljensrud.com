@@ -13,7 +13,7 @@
   --logo-width: min(clamp(240px, 42vw, 560px), 60vh);
 
   --tagline-color: #7b8189;        /* resting grey (darker = less visible) */
-  --tagline-size: calc(var(--logo-width) * 0.05);  /* starting size; the script in index.html fine-tunes it to fit under the logo */
+  --tagline-size: calc(var(--logo-width) * 0.0375);  /* starting size; the script in index.html fine-tunes it to fit under the logo */
   --glow-radius: 110px;            /* how big the green spotlight is under the cursor */
 
   --link-size: clamp(1rem, 1.5vw, 1.25rem);
@@ -92,19 +92,29 @@ body {
   align-items: center;
   justify-content: center;
   padding: 1rem 1.5rem calc(1rem + var(--lift) * 2);  /* extra bottom padding lifts the stack */
+  opacity: 0;                                          /* the whole group fades in once the font has loaded and the tagline is sized, so nothing visibly resizes or moves */
+  transition: opacity 0.6s ease;
 }
+.hero.is-ready { opacity: 1; }
 
 .logo {
   display: block;
   width: var(--logo-width);
   height: auto;
+  aspect-ratio: 2159 / 959;                   /* reserves the logo's space before the image loads, so nothing jumps when it appears */
 }
 
 /* ---------- Tagline (cursive, glows green under the cursor) ---------- */
 .tagline {
   position: relative;
   margin-top: clamp(0.25rem, 1.5vh, 1rem);   /* space between logo and tagline */
-  padding: 0.3em 0.8em;                       /* room so the script's swashes aren't clipped */
+  padding: 0 0.8em;
+  /* The box has a fixed height (worked out from the logo size, not from the text), so a late font or a late logo image
+     can't push the links around. The script sets the final height while the whole group is still invisible. */
+  height: calc(var(--tagline-size) * 1.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-family: var(--font-script);
   font-size: var(--tagline-size);
   font-weight: 600;
@@ -118,6 +128,7 @@ body {
 }
 
 .tagline-base {
+  display: block;
   color: var(--tagline-color);
 }
 
@@ -127,6 +138,9 @@ body {
   position: absolute;
   inset: 0;
   padding: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
   color: var(--accent);
   text-shadow: 0 0 0.2em var(--accent), 0 0 0.7em rgba(0, 255, 185, 0.65);
@@ -180,6 +194,7 @@ nav a {
   font-size: var(--link-size);
   font-weight: 600;
   letter-spacing: 0.04em;
+  line-height: 1.3;                              /* fixed, so the box height doesn't change when the font finishes loading */
   opacity: 0.9;
   /* mouse-out: the grey box fades back in slowly, starting while the corners are still sliding back */
   transition: color 0.5s ease, opacity 0.5s ease, text-shadow 0.5s ease,
@@ -252,5 +267,6 @@ nav a:focus-visible::after {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .hero { transition: none; }
   nav a, nav a::before, nav a::after { transition: none; }
 }
