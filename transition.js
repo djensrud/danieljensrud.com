@@ -246,7 +246,7 @@
     if (warmed[href] || !window.fetch) return;
     warmed[href] = 1;
     fetch(href, { credentials: 'same-origin' }).then(function (r) { return r.ok ? r.text() : ''; }).then(function (t) {
-      var re = /(?:href|src)="([^"#?]+\.(?:css|js|jpg|jpeg|png|svg|webp))"/g, m2;
+      var re = /(?:href|src)="([^"#]+\.(?:css|js|jpg|jpeg|png|svg|webp)(?:\?[^"]*)?)"/g, m2;
       while ((m2 = re.exec(t))) { var u = new URL(m2[1], href).href; if (!warmed[u]) { warmed[u] = 1; fetch(u, { credentials: 'same-origin' }).catch(function () {}); } }
       var img = /<img[^>]+src="([^"]+)"/g, m3;
       while ((m3 = img.exec(t))) { var im = new Image(); im.src = new URL(m3[1], href).href; }

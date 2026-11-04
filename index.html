@@ -18,13 +18,14 @@
   <!-- Page transitions (animation between pages) -->
   <link rel="stylesheet" href="transition.css">
   <script src="transition.js"></script>
-  <noscript><style>.bg-video { opacity: 1; }</style></noscript>
 </head>
 <body>
 
   <!-- BACKGROUND VIDEO
-       Lives at assets/background.mp4. "poster" is the still image shown while it loads. -->
+       Lives at assets/background.mp4. The still image (assets/poster.jpg) shows until it plays; the picture is drawn onto a canvas (see background-video.js)
+       so no browser can ever show player controls on it. -->
   <div class="bg-poster" aria-hidden="true"></div>
+  <canvas class="bg-canvas" aria-hidden="true"></canvas>
   <video class="bg-video" autoplay muted loop playsinline webkit-playsinline disablepictureinpicture disableremoteplayback controlslist="nodownload noremoteplayback nofullscreen" tabindex="-1" aria-hidden="true" preload="auto">
     <source src="assets/background.webm" type="video/webm">
     <source src="assets/background.mp4" type="video/mp4">
@@ -67,24 +68,7 @@
   <!-- 1) Makes the tagline glow follow the mouse (or finger).
        2) Sizes the tagline so it is always a set fraction of the logo's width.
        Change TAGLINE_WIDTH to make it wider or narrower (0.78 = 78% of the logo width). -->
-  <!-- Background video guard: never show controls, and only reveal the video once it is really playing. -->
-  <script>
-    (function () {
-      var v = document.querySelector('.bg-video');
-      if (!v) return;
-      v.controls = false; v.removeAttribute('controls');
-      v.muted = true; v.defaultMuted = true; v.setAttribute('muted', '');
-      function shown() { v.classList.add('is-playing'); }
-      v.addEventListener('playing', shown);
-      if (!v.paused && v.readyState > 2) shown();
-      function tryPlay() { var p = v.play(); if (p && p.catch) p.catch(function () {}); }
-      tryPlay();
-      v.addEventListener('canplay', tryPlay);
-      ['touchstart', 'pointerdown', 'keydown', 'scroll'].forEach(function (t) { window.addEventListener(t, tryPlay, { once: true, passive: true }); });
-      document.addEventListener('visibilitychange', function () { if (!document.hidden && v.paused) tryPlay(); });
-      window.addEventListener('pageshow', function () { if (v.paused) tryPlay(); });
-    })();
-  </script>
+  <script src="background-video.js"></script>
 
   <script>
     const TAGLINE_WIDTH = 0.78;

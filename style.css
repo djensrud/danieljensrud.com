@@ -42,18 +42,27 @@ body {
   z-index: -3;
   background: var(--bg-fallback) url("assets/poster.jpg") center / cover no-repeat;
 }
-.bg-video {
+.bg-video {                                       /* the real video: kept tiny and invisible, only its picture is used (see background-video.js) */
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 2px;
+  height: 2px;
+  opacity: 0.01;
+  z-index: -5;
+  pointer-events: none;
+}
+.bg-canvas {                                      /* what you actually see: the video's picture painted on a canvas */
   position: fixed;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
   z-index: -2;
-  pointer-events: none;   /* video can't be clicked or hovered, so no browser video buttons appear */
+  pointer-events: none;
   opacity: 0;
   transition: opacity 0.8s ease;
 }
-.bg-video.is-playing { opacity: 1; }
+.bg-canvas.is-playing { opacity: 1; }
 
 /* belt and braces: switch off every built-in player control, in every browser */
 .bg-video::-webkit-media-controls,
